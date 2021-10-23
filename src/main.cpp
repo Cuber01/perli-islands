@@ -6,8 +6,11 @@
 #include <memory>
 #include <time.h>
 
+#include <libnoise/noise.h>
+
 #include "main.hpp"
 #include "render.hpp"
+
 
 // sdl
 SDL_Window* window = NULL;
@@ -29,6 +32,8 @@ int next[WINDOW_WIDTH][WINDOW_HEIGHT];
 
 int cursor_x;
 int cursor_y;
+
+using namespace noise;
 
 // objects
 CRenderHandler RenderHandler;
@@ -162,6 +167,10 @@ void main_loop()
 int main(int argc, char *argv[])
 {
     init();
+
+    module::Perlin myModule;
+    double value = myModule.GetValue (1.25, 0.75, 0.5);
+    std::cout << value << std::endl;
 
     while(running)
     {
