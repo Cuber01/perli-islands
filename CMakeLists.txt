@@ -9,7 +9,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 find_package(SDL2 REQUIRED)
 
 # set include dirs
-include_directories(${SDL2_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/ /usr/include/)
+include_directories(${SDL2_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/ /usr/include/ ${CMAKE_CURRENT_SOURCE_DIR}/lib/noiseutils/)
 
 # set compile debug flags
 set(CMAKE_CXX_FLAGS_DEBUG "-g")

@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <libnoise/noise.h>
+#include "noiseutils.h"
 
 #include "main.hpp"
 #include "render.hpp"
