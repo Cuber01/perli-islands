@@ -34,43 +34,6 @@ void CRenderHandler::draw()
 {
     clear();
 
-    // main surface draw loop
-    SDL_LockSurface(surface);
-
-    unsigned char* pixels = (unsigned char*)surface -> pixels;
-    int value;
-
-    for (uint16_t x = 0; x < WINDOW_WIDTH; x++) {
-        for (uint16_t y = 0; y < WINDOW_HEIGHT; y++) {
-
-            //value = grid[x][y];
-
-            if(value != 0)
-            {
-                //color_t color = value->getColor();
-
-                // pixels[4 * (y * surface -> w + x) + 3] = 255;   //opacity
-
-                // pixels[4 * (y * surface -> w + x) + 2] = color.r;   //red
-                // pixels[4 * (y * surface -> w + x) + 1] = color.g;   //green
-                // pixels[4 * (y * surface -> w + x) + 0] = color.b;   //blue   
-
-            }
-
-        }
-    }
-
-    SDL_UnlockSurface(surface);
-
-    // create texture from surface
-    texture = SDL_CreateTextureFromSurface(renderer, surface); 
-    
-    // copy texture over to renderer
-    SDL_RenderCopy(renderer, texture, NULL, NULL); 
-
-    SDL_RenderPresent(renderer);
-
-    SDL_DestroyTexture(texture); //TODO keep one texture instead of destroying it every frame, see: SDL_Texture_Lock or SDL_Texture_Update
 }
 
 void CRenderHandler::clear()

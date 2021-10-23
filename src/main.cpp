@@ -26,11 +26,7 @@ uint32_t lastId;
 bool mouseIsPressed = false;
 bool running = true;
 
-
-// grid
-int grid[WINDOW_WIDTH][WINDOW_HEIGHT];
-int next[WINDOW_WIDTH][WINDOW_HEIGHT];
-
+// cursor pos
 int cursor_x;
 int cursor_y;
 
@@ -39,12 +35,16 @@ using namespace noise;
 // objects
 CRenderHandler RenderHandler;
 
+module::Perlin PerlinModule;
+utils::NoiseMap heightMap;
+utils::NoiseMapBuilderPlane heightMapBuilder;
+
+utils::RendererImage img_renderer;
+utils::Image image;
+
 void init()
 {
     
-    // initalize rand
-    srand((unsigned)time(NULL));
-
     // initalize video
     if( SDL_Init(SDL_INIT_VIDEO) != 0)
     {
@@ -63,6 +63,9 @@ void init()
 		printf( "Window could not be created. SDL_Error: %s\n", SDL_GetError() );
         exit(1);
 	} 
+
+    heightMapBuilder.SetSourceModule(PerlinModule);
+    heightMapBuilder.SetDestNoiseMap(heightMap);
 
     RenderHandler.init();
 
@@ -136,12 +139,6 @@ void reactToEvent()
     }
 }
 
-void updateParticles()
-{
-
-
-
-}
 
 void main_loop()
 {
@@ -154,24 +151,43 @@ void main_loop()
         handleEvent(&event);
     }
 
-
-    memset( next, 0, sizeof(next) );
-
-    updateParticles();
-
-    RenderHandler.draw(); 
-
-    memcpy( grid, next, sizeof(grid) );
-
 }
+
 
 int main(int argc, char *argv[])
 {
     init();
 
-    module::Perlin myModule;
-    double value = myModule.GetValue (1.25, 0.75, 0.5);
-    std::cout << value << std::endl;
+
+    heightMapBuilder.SetDestSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+    heightMapBuilder.SetBounds(0.0, 15.0, 0.0, 15.0);
+
+    heightMapBuilder.Build ();
+
+    img_renderer.SetSourceNoiseMap(heightMap);
+    img_renderer.SetDestImage(image);
+
+    img_renderer.ClearGradient ();
+    img_renderer.AddGradientPoint (-1.0000, utils::Color (  0,   0, 128, 255)); // deeps
+    img_renderer.AddGradientPoint (-0.2500, utils::Color (  0,   0, 255, 255)); // shallow
+    img_renderer.AddGradientPoint ( 0.0000, utils::Color (  0, 128, 255, 255)); // shore
+    img_renderer.AddGradientPoint ( 0.0625, utils::Color (240, 240,  64, 255)); // sand
+    img_renderer.AddGradientPoint ( 0.1250, utils::Color ( 32, 160,   0, 255)); // grass
+    img_renderer.AddGradientPoint ( 0.3750, utils::Color (224, 224,   0, 255)); // dirt
+    img_renderer.AddGradientPoint ( 0.7500, utils::Color (128, 128, 128, 255)); // rock
+    img_renderer.AddGradientPoint ( 1.0000, utils::Color (255, 255, 255, 255)); // snow
+
+    img_renderer.EnableLight();
+    img_renderer.SetLightBrightness(1.8);
+
+    img_renderer.Render();
+
+    utils::WriterBMP writer;
+    writer.SetSourceImage(image);
+    writer.SetDestFilename("test.bmp");
+    writer.WriteDestFile();
+
+
 
     while(running)
     {
