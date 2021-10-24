@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_STANDARD 14)
 
 # add the executable
-add_executable(Perli_Islands.run src/main.cpp src/render.cpp lib/noiseutils/noiseutils.cpp)
+add_executable(Perli_Islands.run src/main.cpp lib/noiseutils/noiseutils.cpp)
 
 # link sdl2
 target_link_libraries(Perli_Islands.run ${SDL2_LIBRARIES} noise)

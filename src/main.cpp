@@ -1,215 +1,162 @@
-#include <SDL.h>
-#include <iostream>
-#include <stdio.h>
-#include <stdint.h>
-#include <cstdlib>
-#include <memory>
-#include <time.h>
-
 #include <libnoise/noise.h>
 #include "noiseutils.h"
 
 #include "main.hpp"
-#include "render.hpp"
-
-
-// sdl
-SDL_Window* window = NULL;
-SDL_Event event;
-
-//int
-uint16_t lastKeyboardKeyPressed;
-uint8_t  lastMouseKeyPressed;
-uint32_t lastId;
-
-//bool
-bool mouseIsPressed = false;
-bool running = true;
-
-// cursor pos
-int cursor_x;
-int cursor_y;
 
 using namespace noise;
 
-// objects
-CRenderHandler RenderHandler;
 
-module::RidgedMulti PerlinModule;
-//module::RidgedMulti mountainTerrain;
+// --------------- Modules and Maps ---------------
 
+// lumpy terrain
+module::Billow baseFlatTerrain;
+
+// flatten baseFlatTerrain
+module::ScaleBias flatTerrain;
+
+// erratic terrain
+module::RidgedMulti mountainTerrain;
+
+
+// height map
 utils::NoiseMap heightMap;
+
+// heightMapBuilder
 utils::NoiseMapBuilderPlane heightMapBuilder;
 
-utils::RendererImage img_renderer;
+// --------------- Image Rendering ---------------
+
+utils::RendererImage renderer;
 utils::Image image;
 
-void init()
+module::Perlin terrainType;
+
+module::Select finalTerrain;
+
+// --------------- Explaining LibNoise functions ---------------
+//
+// SetOctaveCount(1-6) - Octaves control the amount of detail, every octave doubles the frequency of the last one. 
+//
+// SetFrequency(1-16) - Frequency means how many "waves" do we generate per unit length. Big frequency = tons of small islands.
+//
+// SetPersistence(0-1) - A multiplier that determines how quickly the amplitudes change for each successive octave. Bigger frequency means more "fuzzy" waves.
+//
+//
+//
+// -------------------------------------------------------------
+
+
+void setupTerrain()
 {
-    
-    // initalize video
-    if( SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        printf( "SDL failed to initialize. Error: %s\n", SDL_GetError() );
-        exit(1);
-    }
 
-    // setup window
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_SHOWN);
+    // setup mountainTerrain
+    mountainTerrain.SetOctaveCount(6);
+    mountainTerrain.SetFrequency(1);
 
-    // create window
-	// window = SDL_CreateWindow("Perli Islands by @Cuber01", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+    // setup baseFlatTerrain
+    baseFlatTerrain.SetFrequency(2.0);
 
-	// if(window == NULL)
-	// {
-	// 	printf( "Window could not be created. SDL_Error: %s\n", SDL_GetError() );
-    //     exit(1);
-	// } 
+    // flatten baseFlatTerrain and store it in flatTerrain
+    flatTerrain.SetSourceModule(0, baseFlatTerrain);   
+    flatTerrain.SetScale(0.125);
+    flatTerrain.SetBias(-0.75);
 
-    // from 1-6, more than 6 yields almost no additional effect. changes the amount of detail
-    PerlinModule.SetOctaveCount(6);
+    // setup terrainType
+    terrainType.SetFrequency(0.5);
+    terrainType.SetPersistence(0.25);
 
-    // from 1-16. bigger = smaller islands
-    PerlinModule.SetFrequency(1);
+    // setup finalTerrain
+    finalTerrain.SetSourceModule(0, flatTerrain); // setup layer 1
+    finalTerrain.SetSourceModule(1, mountainTerrain); // setup layer 2
 
-    // from 0-1. changes the amount of fuzziness
-    //PerlinModule.SetPersistence(0.5);
+    finalTerrain.SetControlModule(terrainType); // merge two layers according to terrainType to create "biomes"
 
-    heightMapBuilder.SetSourceModule(PerlinModule);
+    // wrap up finalTerrain
+    finalTerrain.SetEdgeFalloff(0.125);
+    finalTerrain.SetBounds(0.0, 1000.0);
+
+}
+
+void setupMapBuilder()
+{
+    heightMapBuilder.SetSourceModule(finalTerrain);
     heightMapBuilder.SetDestNoiseMap(heightMap);
 
-    RenderHandler.init();
-
+    heightMapBuilder.SetDestSize (600, 600);
+    heightMapBuilder.SetBounds(0.0, 15.0, 0.0, 15.0);
 }
 
-void quit()
+void setupRenderer()
 {
-    SDL_DestroyRenderer( RenderHandler.renderer );
-	SDL_DestroyWindow( window );
-	SDL_Quit();
-}
+    renderer.SetSourceNoiseMap(heightMap);
+    renderer.SetDestImage(image);
 
-void handleEvent(SDL_Event* event)
-{
+    renderer.ClearGradient ();
+    renderer.AddGradientPoint (-1.00, utils::Color ( 32, 160,   0, 255)); // grass
+    renderer.AddGradientPoint (-0.25, utils::Color (224, 224,   0, 255)); // dirt
+    renderer.AddGradientPoint ( 0.25, utils::Color (128, 128, 128, 255)); // rock
+    renderer.AddGradientPoint ( 1.00, utils::Color (255, 255, 255, 255)); // snow
 
-    switch (event->type)
-    {
-            
-        case SDL_MOUSEMOTION:
-            SDL_GetMouseState( &cursor_x, &cursor_y );
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-            lastMouseKeyPressed = event->button.button;
-            mouseIsPressed = true;
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            mouseIsPressed = false;
-            break;
-
-    }
-
-    switch (event->type)
-    {
-
-    case SDL_KEYDOWN:
-        lastKeyboardKeyPressed = event->key.keysym.sym;
-        break;
-
-    case SDL_QUIT:
-        running = false;
-        break;
-
-    }
-
-}
-
-void reactToEvent()
-{
-    if(mouseIsPressed)
-    {
-        if(lastMouseKeyPressed == SDL_BUTTON_LEFT)
-        {
-
-        } else if (lastMouseKeyPressed == SDL_BUTTON_RIGHT) 
-        {
-            
-        }   
-         
-    } else 
-    {
-
-        switch (lastKeyboardKeyPressed)
-        {
-            default:
-                break;
-        }
-
-    }
-}
-
-
-void main_loop()
-{
-  
-    reactToEvent();
-
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        handleEvent(&event);
-    }
+    renderer.EnableLight();
+    renderer.SetLightBrightness(1.8);
 
 }
 
 
 int main(int argc, char *argv[])
 {
-    init();
 
+    setupTerrain();
 
-    heightMapBuilder.SetDestSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    heightMapBuilder.SetBounds(0.0, 15.0, 0.0, 15.0);
+    setupMapBuilder();
+
+    setupRenderer();
 
     heightMapBuilder.Build();
 
-    img_renderer.SetSourceNoiseMap(heightMap);
-    img_renderer.SetDestImage(image);
-
-    img_renderer.ClearGradient ();
-    // img_renderer.AddGradientPoint (-1.0000, utils::Color (  0,   0, 128, 255)); // deeps
-    // img_renderer.AddGradientPoint (-0.2500, utils::Color (  0,   0, 255, 255)); // shallow
-    // img_renderer.AddGradientPoint ( 0.0000, utils::Color (  0, 128, 255, 255)); // shore
-    // img_renderer.AddGradientPoint ( 0.0625, utils::Color (240, 240,  64, 255)); // sand
-    // img_renderer.AddGradientPoint ( 0.1250, utils::Color ( 32, 160,   0, 255)); // grass
-    // img_renderer.AddGradientPoint ( 0.3750, utils::Color (224, 224,   0, 255)); // dirt
-    // img_renderer.AddGradientPoint ( 0.7500, utils::Color (128, 128, 128, 255)); // rock
-    // img_renderer.AddGradientPoint ( 1.0000, utils::Color (255, 255, 255, 255)); // snow
-
-    img_renderer.AddGradientPoint (-1.00, utils::Color ( 32, 160,   0, 255)); // grass
-    img_renderer.AddGradientPoint (-0.25, utils::Color (224, 224,   0, 255)); // dirt
-    img_renderer.AddGradientPoint ( 0.25, utils::Color (128, 128, 128, 255)); // rock
-    img_renderer.AddGradientPoint ( 1.00, utils::Color (255, 255, 255, 255)); // snow
-
-    img_renderer.EnableLight();
-    img_renderer.SetLightBrightness(1.8);
-
-    img_renderer.Render();
+    renderer.Render();
 
     utils::WriterBMP writer;
     writer.SetSourceImage(image);
     writer.SetDestFilename("test.bmp");
     writer.WriteDestFile();
 
-
-
-    while(running)
-    {
-        main_loop();
-    }
-
-    quit();
-
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// trash
+
+
+// renderer.ClearGradient ();
+// renderer.AddGradientPoint (-1.0000, utils::Color (  0,   0, 128, 255)); // deeps
+// renderer.AddGradientPoint (-0.2500, utils::Color (  0,   0, 255, 255)); // shallow
+// renderer.AddGradientPoint ( 0.0000, utils::Color (  0, 128, 255, 255)); // shore
+// renderer.AddGradientPoint ( 0.0625, utils::Color (240, 240,  64, 255)); // sand
+// renderer.AddGradientPoint ( 0.1250, utils::Color ( 32, 160,   0, 255)); // grass
+// renderer.AddGradientPoint ( 0.3750, utils::Color (224, 224,   0, 255)); // dirt
+// renderer.AddGradientPoint ( 0.7500, utils::Color (128, 128, 128, 255)); // rock
+// renderer.AddGradientPoint ( 1.0000, utils::Color (255, 255, 255, 255)); // snow
