@@ -17,6 +17,8 @@ module::ScaleBias flatTerrain;
 // erratic terrain
 module::RidgedMulti mountainTerrain;
 
+module::Turbulence finalTerrain;
+
 
 // height map
 utils::NoiseMap heightMap;
@@ -31,17 +33,17 @@ utils::Image image;
 
 module::Perlin terrainType;
 
-module::Select finalTerrain;
+module::Select terrainSelector;
 
 // --------------- Explaining LibNoise functions ---------------
 //
 // SetOctaveCount(1-6) - Octaves control the amount of detail, every octave doubles the frequency of the last one. 
 //
-// SetFrequency(1-16) - Frequency means how many "waves" do we generate per unit length. Big frequency = tons of small islands.
+// SetFrequency(1-16) - Frequency means how often do we call a certain function affecting the terrain.
 //
 // SetPersistence(0-1) - A multiplier that determines how quickly the amplitudes change for each successive octave. Bigger frequency means more "fuzzy" waves.
 //
-//
+// SetPower(0-1) - Determines the magnitude of changes a certain function can do.
 //
 // -------------------------------------------------------------
 
@@ -65,15 +67,21 @@ void setupTerrain()
     terrainType.SetFrequency(0.5);
     terrainType.SetPersistence(0.25);
 
+    // setup terrainSelector
+    terrainSelector.SetSourceModule(0, flatTerrain); // setup layer 1
+    terrainSelector.SetSourceModule(1, mountainTerrain); // setup layer 2
+
+    terrainSelector.SetControlModule(terrainType); // merge two layers according to terrainType to create "biomes"
+
+    // wrap up terrainSelector
+    terrainSelector.SetEdgeFalloff(0.125);
+    terrainSelector.SetBounds(0.0, 1000.0);
+
     // setup finalTerrain
-    finalTerrain.SetSourceModule(0, flatTerrain); // setup layer 1
-    finalTerrain.SetSourceModule(1, mountainTerrain); // setup layer 2
-
-    finalTerrain.SetControlModule(terrainType); // merge two layers according to terrainType to create "biomes"
-
-    // wrap up finalTerrain
-    finalTerrain.SetEdgeFalloff(0.125);
-    finalTerrain.SetBounds(0.0, 1000.0);
+    finalTerrain.SetSourceModule (0, terrainSelector);
+    
+    finalTerrain.SetFrequency(4.0);
+    finalTerrain.SetPower(0.05);
 
 }
 
