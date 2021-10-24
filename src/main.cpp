@@ -35,7 +35,9 @@ using namespace noise;
 // objects
 CRenderHandler RenderHandler;
 
-module::Perlin PerlinModule;
+module::RidgedMulti PerlinModule;
+//module::RidgedMulti mountainTerrain;
+
 utils::NoiseMap heightMap;
 utils::NoiseMapBuilderPlane heightMapBuilder;
 
@@ -68,10 +70,10 @@ void init()
     PerlinModule.SetOctaveCount(6);
 
     // from 1-16. bigger = smaller islands
-    PerlinModule.SetFrequency(16);
+    PerlinModule.SetFrequency(1);
 
     // from 0-1. changes the amount of fuzziness
-    PerlinModule.SetPersistence(1);
+    //PerlinModule.SetPersistence(0.5);
 
     heightMapBuilder.SetSourceModule(PerlinModule);
     heightMapBuilder.SetDestNoiseMap(heightMap);
@@ -176,14 +178,19 @@ int main(int argc, char *argv[])
     img_renderer.SetDestImage(image);
 
     img_renderer.ClearGradient ();
-    img_renderer.AddGradientPoint (-1.0000, utils::Color (  0,   0, 128, 255)); // deeps
-    img_renderer.AddGradientPoint (-0.2500, utils::Color (  0,   0, 255, 255)); // shallow
-    img_renderer.AddGradientPoint ( 0.0000, utils::Color (  0, 128, 255, 255)); // shore
-    img_renderer.AddGradientPoint ( 0.0625, utils::Color (240, 240,  64, 255)); // sand
-    img_renderer.AddGradientPoint ( 0.1250, utils::Color ( 32, 160,   0, 255)); // grass
-    img_renderer.AddGradientPoint ( 0.3750, utils::Color (224, 224,   0, 255)); // dirt
-    img_renderer.AddGradientPoint ( 0.7500, utils::Color (128, 128, 128, 255)); // rock
-    img_renderer.AddGradientPoint ( 1.0000, utils::Color (255, 255, 255, 255)); // snow
+    // img_renderer.AddGradientPoint (-1.0000, utils::Color (  0,   0, 128, 255)); // deeps
+    // img_renderer.AddGradientPoint (-0.2500, utils::Color (  0,   0, 255, 255)); // shallow
+    // img_renderer.AddGradientPoint ( 0.0000, utils::Color (  0, 128, 255, 255)); // shore
+    // img_renderer.AddGradientPoint ( 0.0625, utils::Color (240, 240,  64, 255)); // sand
+    // img_renderer.AddGradientPoint ( 0.1250, utils::Color ( 32, 160,   0, 255)); // grass
+    // img_renderer.AddGradientPoint ( 0.3750, utils::Color (224, 224,   0, 255)); // dirt
+    // img_renderer.AddGradientPoint ( 0.7500, utils::Color (128, 128, 128, 255)); // rock
+    // img_renderer.AddGradientPoint ( 1.0000, utils::Color (255, 255, 255, 255)); // snow
+
+    img_renderer.AddGradientPoint (-1.00, utils::Color ( 32, 160,   0, 255)); // grass
+    img_renderer.AddGradientPoint (-0.25, utils::Color (224, 224,   0, 255)); // dirt
+    img_renderer.AddGradientPoint ( 0.25, utils::Color (128, 128, 128, 255)); // rock
+    img_renderer.AddGradientPoint ( 1.00, utils::Color (255, 255, 255, 255)); // snow
 
     img_renderer.EnableLight();
     img_renderer.SetLightBrightness(1.8);
