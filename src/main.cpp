@@ -56,13 +56,22 @@ void init()
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_SHOWN);
 
     // create window
-	window = SDL_CreateWindow("Perli Islands by @Cuber01", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+	// window = SDL_CreateWindow("Perli Islands by @Cuber01", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
 
-	if(window == NULL)
-	{
-		printf( "Window could not be created. SDL_Error: %s\n", SDL_GetError() );
-        exit(1);
-	} 
+	// if(window == NULL)
+	// {
+	// 	printf( "Window could not be created. SDL_Error: %s\n", SDL_GetError() );
+    //     exit(1);
+	// } 
+
+    // from 1-6, more than 6 yields almost no additional effect. changes the amount of detail
+    PerlinModule.SetOctaveCount(6);
+
+    // from 1-16. bigger = smaller islands
+    PerlinModule.SetFrequency(16);
+
+    // from 0-1. changes the amount of fuzziness
+    PerlinModule.SetPersistence(1);
 
     heightMapBuilder.SetSourceModule(PerlinModule);
     heightMapBuilder.SetDestNoiseMap(heightMap);
@@ -80,7 +89,6 @@ void quit()
 
 void handleEvent(SDL_Event* event)
 {
-
 
     switch (event->type)
     {
@@ -162,7 +170,7 @@ int main(int argc, char *argv[])
     heightMapBuilder.SetDestSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     heightMapBuilder.SetBounds(0.0, 15.0, 0.0, 15.0);
 
-    heightMapBuilder.Build ();
+    heightMapBuilder.Build();
 
     img_renderer.SetSourceNoiseMap(heightMap);
     img_renderer.SetDestImage(image);

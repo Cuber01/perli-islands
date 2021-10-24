@@ -9,13 +9,13 @@
 void CRenderHandler::init()
 {
    
-    renderer = SDL_CreateRenderer(window, -1, 0); 
+    // renderer = SDL_CreateRenderer(window, -1, 0); 
 
-    if (renderer == NULL)
-    {
-        printf("Renderer failed to initialize. Error: %s\n", SDL_GetError());
-        exit(1);
-    }
+    // if (renderer == NULL)
+    // {
+    //     printf("Renderer failed to initialize. Error: %s\n", SDL_GetError());
+    //     exit(1);
+    // }
     
     surface = SDL_CreateRGBSurface(SDL_SWSURFACE, WINDOW_WIDTH, WINDOW_HEIGHT, 32, 0, 0, 0, 0);
 
@@ -33,6 +33,16 @@ void CRenderHandler::init()
 void CRenderHandler::draw()
 {
     clear();
+
+    surface = SDL_LoadBMP("test.bmp");
+    
+
+    if (!surface) {
+        printf("Failed to load image. Error: %s", SDL_GetError());
+        exit(1);
+    }
+
+    SDL_FreeSurface(surface);
 
 }
 
